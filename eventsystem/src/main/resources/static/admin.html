@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Admin Dashboard - Event Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         body { background-color: #f8f9fa; }
         .card { margin-bottom: 20px; border-radius: 12px; }
@@ -36,50 +37,84 @@
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h3 class="h5">All Events</h3>
-            <div id="eventList" class="row"></div>
-        </div>
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h3 class="h5">All Events</h3>
+      <div id="eventList" class="row"></div>
     </div>
+  </div>
 
-    <!-- Student Section -->
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h2 class="h4">Register Student</h2>
-            <form id="studentForm" class="row g-2">
-                <div class="col-md-4"><input type="text" id="studentId" class="form-control" placeholder="Student ID" required></div>
-                <div class="col-md-4"><input type="text" id="studentName" class="form-control" placeholder="Name" required></div>
-                <div class="col-md-4"><input type="email" id="studentEmail" class="form-control" placeholder="Email" required></div>
-                <div class="col-12"><button class="btn btn-success">Add Student</button></div>
-            </form>
+  <!-- Registration Section (moved above students) -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="h4">Event Registration</h2>
+      <form id="registrationForm" class="row g-2 align-items-center">
+        <div class="col-md-5">
+          <select id="regStudent" class="form-select" required></select>
         </div>
+        <div class="col-md-5">
+          <select id="regEvent" class="form-select" required></select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-warning w-100">Register</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h3 class="h5">All Students</h3>
-            <ul id="studentList" class="list-group"></ul>
-        </div>
+  <!-- Student Section -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="h4">Register Student</h2>
+      <form id="studentForm" class="row g-2">
+        <div class="col-md-4"><input type="text" id="studentId" class="form-control" placeholder="Student ID" required></div>
+        <div class="col-md-4"><input type="text" id="studentName" class="form-control" placeholder="Name" required></div>
+        <div class="col-md-4"><input type="email" id="studentEmail" class="form-control" placeholder="Email" required></div>
+        <div class="col-12"><button class="btn btn-success">Add Student</button></div>
+      </form>
     </div>
+  </div>
 
-    <!-- Registration Section -->
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h2 class="h4">Event Registration</h2>
-            <form id="registrationForm" class="row g-2 align-items-center">
-                <div class="col-md-5">
-                    <select id="regStudent" class="form-select" required></select>
-                </div>
-                <div class="col-md-5">
-                    <select id="regEvent" class="form-select" required></select>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-warning w-100">Register</button>
-                </div>
-            </form>
-        </div>
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h3 class="h5">All Students</h3>
+      <div class="mb-2">
+        <input id="studentSearch" class="form-control" placeholder="Search students by id, name or email">
+      </div>
+      <ul id="studentList" class="list-group"></ul>
     </div>
+  </div>
+  
+  <!-- Modals -->
+  <div class="modal fade" id="eventDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="eventDetailsModalLabel">Event Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="eventDetailsModalBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="studentDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="studentDetailsModalLabel">Student Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="studentDetailsModalBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -133,20 +168,14 @@
                 <strong>Capacity:</strong> ${seatsFilled}/${ev.capacity}<br>
                 <strong>Organizer:</strong> ${ev.organizer}
               </p>
-              <h6>Registered Students:</h6>
-              <ul class="list-group list-group-flush">
-                ${ev.registeredStudentIds && ev.registeredStudentIds.length > 0 ?
-                  ev.registeredStudentIds.map(sid => {
-                    const stu = studentsCache.find(s => s.id === sid);
-                    return `<li class="list-group-item">
-                              👤 ${stu ? stu.name + " (" + stu.email + ")" : sid}
-                              <button class="btn btn-sm btn-danger float-end"
-                                onclick="cancelRegistration(${ev.id}, '${sid}')">❌ Cancel</button>
-                            </li>`;
-                  }).join("") :
-                  "<li class='list-group-item text-muted'>No students registered yet.</li>"
-                }
-              </ul>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="mb-0"><strong>Registered:</strong> ${seatsFilled}</div>
+                <div>
+                  <button class="btn btn-sm btn-outline-primary me-2" onclick="exportEvent(${ev.id})">Export</button>
+                  <button class="btn btn-sm btn-outline-secondary me-2" onclick="openEventDetails(${ev.id})">View</button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="deleteEvent(${ev.id})">Delete</button>
+                </div>
+              </div>
             </div>
           </div>
         `;
@@ -193,8 +222,19 @@
 
       students.forEach(st => {
         const li = document.createElement("li");
-        li.className = "list-group-item";
-        li.textContent = `${st.id}: ${st.name} (${st.email})`;
+        li.className = "list-group-item d-flex justify-content-between align-items-center";
+        li.innerHTML = `<div>${st.id}: ${st.name} (${st.email})</div>`;
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'btn btn-sm btn-outline-secondary me-2';
+        viewBtn.textContent = 'View Details';
+        viewBtn.onclick = () => openStudentDetails(st.id);
+        li.appendChild(viewBtn);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn btn-sm btn-outline-danger';
+        delBtn.textContent = 'Delete';
+        delBtn.onclick = () => deleteStudent(st.id);
+        li.appendChild(delBtn);
         list.appendChild(li);
 
         const option = document.createElement("option");
@@ -241,6 +281,189 @@
       showMessage(msg, res.ok ? "warning" : "danger");
       fetchEvents();
     }
+
+    // === Export Event ===
+    async function exportEvent(eventId) {
+      const res = await fetch(`${API_BASE}/events/${eventId}/export`);
+      if (!res.ok) { showMessage(await res.text(), 'danger'); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `event_${eventId}_registrations.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showMessage('Export started', 'success');
+    }
+
+    // === Delete Event ===
+    async function deleteEvent(eventId) {
+      if (!confirm('Delete this event? This action cannot be undone.')) return;
+      const res = await fetch(`${API_BASE}/events/${eventId}`, { method: 'DELETE' });
+      if (res.ok) {
+        showMessage('Event deleted', 'warning');
+        fetchEvents();
+      } else {
+        showMessage('Failed to delete event', 'danger');
+      }
+    }
+
+    // === Event Details Modal (show list and allow cancel per student) ===
+    function openEventDetails(eventId) {
+      fetch(`${API_BASE}/events/${eventId}`).then(r => r.json()).then(async evData => {
+        const modalRoot = document.getElementById('eventDetailsModalBody');
+        modalRoot.innerHTML = '';
+        const title = document.getElementById('eventDetailsModalLabel');
+        title.textContent = `Event: ${evData.name} (ID: ${evData.id})`;
+
+        if (!evData.registeredStudentIds || evData.registeredStudentIds.length === 0) {
+          modalRoot.innerHTML = '<p class="text-muted">No students registered.</p>';
+        } else {
+          const ul = document.createElement('ul'); ul.className = 'list-group';
+          for (const sid of evData.registeredStudentIds) {
+            const li = document.createElement('li'); li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            const stu = studentsCache.find(s => s.id === sid);
+            li.innerHTML = `<div>${stu ? stu.name + ' (' + stu.email + ')' : sid}</div>`;
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-sm btn-danger';
+            btn.textContent = 'Cancel Registration';
+            btn.onclick = async () => {
+              const res = await fetch(`${API_BASE}/registrations/${eventId}/${sid}`, { method: 'DELETE' });
+              const msg = await res.text();
+              showMessage(msg, res.ok ? 'warning' : 'danger');
+              fetchEvents();
+              // update modal content
+              openEventDetails(eventId);
+            };
+            li.appendChild(btn);
+            ul.appendChild(li);
+          }
+          modalRoot.appendChild(ul);
+        }
+
+        // show bootstrap modal (simple)
+        const modal = new bootstrap.Modal(document.getElementById('eventDetailsModal'));
+        modal.show();
+      }).catch(e => showMessage('Failed to load event details', 'danger'));
+    }
+
+    // === Delete Student ===
+    async function deleteStudent(studentId) {
+      if (!confirm('Delete this student? This action cannot be undone.')) return;
+      const res = await fetch(`${API_BASE}/students/${encodeURIComponent(studentId)}`, { method: 'DELETE' });
+      if (res.ok) {
+        showMessage('Student deleted', 'warning');
+        fetchStudents();
+        fetchEvents();
+      } else {
+        showMessage('Failed to delete student', 'danger');
+      }
+    }
+
+    // === Student search/filter ===
+    document.getElementById('studentSearch').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const list = document.getElementById('studentList');
+      list.innerHTML = '';
+      const filtered = studentsCache.filter(s => (
+        s.id.toLowerCase().includes(q) || (s.name && s.name.toLowerCase().includes(q)) || (s.email && s.email.toLowerCase().includes(q))
+      ));
+      filtered.forEach(st => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.innerHTML = `<div>${st.id}: ${st.name} (${st.email})</div>`;
+  const viewBtn = document.createElement('button');
+  viewBtn.className = 'btn btn-sm btn-outline-secondary me-2';
+  viewBtn.textContent = 'View Details';
+  viewBtn.onclick = () => openStudentDetails(st.id);
+  li.appendChild(viewBtn);
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'btn btn-sm btn-outline-danger';
+  delBtn.textContent = 'Delete';
+  delBtn.onclick = () => deleteStudent(st.id);
+  li.appendChild(delBtn);
+        list.appendChild(li);
+      });
+    });
+
+    // Open student details modal (shows events they're registered for and allow cancel per event)
+    function openStudentDetails(studentId) {
+      const student = studentsCache.find(s => s.id === studentId);
+      if (!student) { showMessage('Student not found', 'danger'); return; }
+      document.getElementById('studentDetailsModalLabel').textContent = `${student.id}: ${student.name}`;
+      const body = document.getElementById('studentDetailsModalBody');
+      body.innerHTML = '<p>Loading...</p>';
+      fetch(`${API_BASE}/events`).then(r => r.json()).then(events => {
+        const registered = events.filter(ev => (ev.registeredStudentIds || []).includes(studentId));
+        if (registered.length === 0) {
+          body.innerHTML = '<p class="text-muted">This student is not registered for any events.</p>';
+        } else {
+          const ul = document.createElement('ul'); ul.className = 'list-group';
+          registered.forEach(ev => {
+            const li = document.createElement('li'); li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            li.innerHTML = `<div>${ev.name} (ID: ${ev.id})</div>`;
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-sm btn-danger';
+            btn.textContent = 'Cancel Registration';
+            btn.onclick = async () => {
+              const res = await fetch(`${API_BASE}/registrations/${ev.id}/${studentId}`, { method: 'DELETE' });
+              const msg = await res.text();
+              showMessage(msg, res.ok ? 'warning' : 'danger');
+              fetchEvents();
+              openStudentDetails(studentId);
+            };
+            li.appendChild(btn);
+            ul.appendChild(li);
+          });
+          body.innerHTML = '';
+          body.appendChild(ul);
+        }
+        const modal = new bootstrap.Modal(document.getElementById('studentDetailsModal'));
+        modal.show();
+      });
+    }
+
+    // update fetchStudents to render 'View Details' buttons for each student
+    const origFetchStudents = fetchStudents;
+    fetchStudents = async function() {
+      const res = await fetch(`${API_BASE}/students`);
+      const students = await res.json();
+      studentsCache = students;
+
+      const list = document.getElementById("studentList");
+      const select = document.getElementById("regStudent");
+      list.innerHTML = "";
+      select.innerHTML = "<option value='' disabled selected>Select student</option>";
+
+        students.forEach(st => {
+          const li = document.createElement("li");
+          li.className = "list-group-item d-flex justify-content-between align-items-center";
+          li.innerHTML = `<div>${st.id}: ${st.name} (${st.email})</div>`;
+          const viewBtn = document.createElement('button');
+          viewBtn.className = 'btn btn-sm btn-outline-secondary me-2';
+          viewBtn.textContent = 'View Details';
+          viewBtn.onclick = () => openStudentDetails(st.id);
+          li.appendChild(viewBtn);
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'btn btn-sm btn-outline-danger';
+          delBtn.textContent = 'Delete';
+          delBtn.onclick = () => deleteStudent(st.id);
+          li.appendChild(delBtn);
+
+          list.appendChild(li);
+
+        const option = document.createElement("option");
+        option.value = st.id;
+        option.textContent = `${st.id}: ${st.name}`;
+        select.appendChild(option);
+      });
+    };
+
+
 
     // Initial load
     fetchStudents().then(fetchEvents);

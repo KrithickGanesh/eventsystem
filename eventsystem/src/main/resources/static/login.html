@@ -39,7 +39,8 @@
 </div>
 
 <script>
-    const ADMIN_PASSWORD = "Admin420";
+  const ADMIN_PASSWORD = "Admin420";
+  const API_BASE = "http://localhost:8080/api";
 
     // Auto redirect if already logged in
     const savedUser = localStorage.getItem("user");
@@ -69,7 +70,7 @@
       setTimeout(() => statusDiv.classList.add("d-none"), 4000);
     }
 
-    document.getElementById("loginForm").addEventListener("submit", function(e) {
+  document.getElementById("loginForm").addEventListener("submit", async function(e) {
       e.preventDefault();
       const userId = document.getElementById("userId").value.trim();
       const password = document.getElementById("password").value.trim();
@@ -89,9 +90,26 @@
           showMessage("❌ Students must enter email", "danger");
           return;
         }
-        userData = { role: "student", id: userId, email: email };
-        localStorage.setItem("user", JSON.stringify(userData));
-        window.location.href = "student.html";
+        // Validate student exists and email matches
+        try {
+          const res = await fetch(`${API_BASE}/students/${encodeURIComponent(userId)}`);
+          if (!res.ok) {
+            showMessage("Student not found", "danger");
+            return;
+          }
+          const student = await res.json();
+          if (!student.email || student.email.toLowerCase() !== email.toLowerCase()) {
+            showMessage("Student not found", "danger");
+            return;
+          }
+          // Valid student — store user info (include name if present)
+          const userData = { role: "student", id: student.id, email: student.email, name: student.name };
+          localStorage.setItem("user", JSON.stringify(userData));
+          window.location.href = "student.html";
+        } catch (err) {
+          showMessage("❌ Failed to validate student. Try again.", "danger");
+          return;
+        }
       }
     });
 </script>

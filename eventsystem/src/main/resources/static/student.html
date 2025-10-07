@@ -43,7 +43,28 @@
     const studentId = user.id;
     const email = user.email;
 
-    document.getElementById("welcome").textContent = `Welcome, ${studentId} (${email})`;
+    // Show student's name in greeting. Prefer name stored in localStorage user object,
+    // otherwise fetch the student by id to get the name.
+    async function setWelcome() {
+      let name = user.name;
+      if (!name) {
+        try {
+          const r = await fetch(`${API_BASE}/students/${studentId}`);
+          if (r.ok) {
+            const data = await r.json();
+            name = data.name;
+          }
+        } catch (e) {
+          // ignore and fall back to id
+        }
+      }
+      // Title-case the name if present (Prakash instead of prakash)
+      function titleCase(s) {
+        return s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      }
+      const displayName = name ? titleCase(name) : studentId;
+      document.getElementById("welcome").textContent = `Welcome, ${displayName}`;
+    }
 
     function logout() {
       localStorage.removeItem("user");
@@ -107,7 +128,8 @@
       fetchEvents();
     }
 
-    fetchEvents();
+  // Ensure welcome is set before loading events so greeting appears immediately
+  setWelcome().then(() => fetchEvents());
 </script>
 </body>
 </html>
