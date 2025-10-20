@@ -124,7 +124,7 @@
     // === Auth check ===
     const savedUser = localStorage.getItem("user");
     if (!savedUser) {
-      window.location.href = "login.html";
+      window.location.href = "index.html";
     } else {
       const user = JSON.parse(savedUser);
       if (user.role !== "admin") {
@@ -134,7 +134,7 @@
 
     function logout() {
       localStorage.removeItem("user");
-      window.location.href = "login.html";
+      window.location.href = "index.html";
     }
 
     function showMessage(msg, type = "info") {
